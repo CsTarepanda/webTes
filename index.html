@@ -1,0 +1,355 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="/static/main.css">
+<script type="text/javascript" src="https://raw.githubusercontent.com/CsTarepanda/tes/master/processing.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js"></script>
+<title>title</title>
+
+<script>
+	window.onload = function(){
+		var canvas = $("#mainCanvas")[0]
+		var codeElm = $("#pmain")[0]
+		var code = codeElm.textContent || codeElm.innerText;
+		Processing(canvas, code);
+
+		canvas = $("#subCanvas")[0];
+		codeElm = $("#psub")[0];
+		var code = codeElm.textContent || codeElm.innerText;
+		Processing(canvas, code);
+	};
+	
+	$("html").mousemove(function(e){
+		$("#domcon").css("position", "fixed");
+		$("#domcon").css("left", (e.clientX + 10)+"px");
+		$("#domcon").css("top", (e.clientY + 10)+"px");
+	});
+	
+	var consoleLog = new Array(10);
+	var nowTarget = -1;
+	function consoleReset(){
+		for(var i = 0; i < consoleLog.length; i++){
+			consoleLog[i] = "";
+		}
+	}
+	function consolen(cont){
+		if(nowTarget == -1){
+			consoleReset();
+			nowTarget++;
+		}
+		if(nowTarget >= 10){
+			for(var i = 0; i < consoleLog.length - 1; i++){
+				consoleLog[i] = consoleLog[i + 1];
+			}
+			consoleLog[consoleLog.length - 1] = "";
+			nowTarget--;
+		}
+		consoleLog[nowTarget++] += cont;
+		var view = "";
+		for(var i = 0; i < consoleLog.length; i++){
+			view += consoleLog[i] + "<br>";
+		}
+		$("#domcon").html(view);
+	}
+	function console(cont){
+		if(nowTarget == -1){
+			consoleReset();
+			nowTarget++;
+		}
+		if(nowTarget >= 10){
+			for(var i = 0; i < consoleLog.length - 1; i++){
+				consoleLog[i] = consoleLog[i + 1];
+			}
+			consoleLog[consoleLog.length - 1] = "";
+			nowTarget--;
+		}
+		consoleLog[nowTarget] += cont;
+		var view = "";
+		for(var i = 0; i < consoleLog.length; i++){
+			view += consoleLog[i] + "<br>";
+		}
+		$("#domcon").html(view);
+	}
+</script>
+<script id="pmain" type="application/processing">
+
+ArrayList figures;
+var mainCont;
+void setup(){
+	// size($(window).width() - 20, $(window).height() - 23);
+	size($(window).width() - 15, 500);
+	figures = new ArrayList();
+	noStroke();
+	consolen("mode change \'g\'");
+	var canvas = $("#mainCanvas")[0];
+	mainContext = canvas.getContext("2d");
+}
+
+int mode = 0;
+boolean click = false;
+boolean moupre = false;
+boolean mourele = true;
+int pmx, pmy;
+void draw(){
+	background(0);
+	if(moupre && !click){
+		pmx = mouseX;
+		pmy = mouseY;
+		click = true;
+	}
+	if(mourele && click){
+		switch(mode){
+		case 0:
+		figures.add(new Ellipse(mouseX, mouseY, random(5, 50), new Color(0, random(170, 255), 0, 100)));
+		figures.get(figures.size() - 1).setPhys(0, 0.007);
+		figures.get(figures.size() - 1).setSpeed((pmx - mouseX)/100, (pmy - mouseY)/100);
+		break;
+		case 1:
+		figures.add(new Ellipse(mouseX, mouseY, random(5, 50), new Color(0, 255, 0, 100)));
+		figures.get(figures.size() - 1).setPhys(0, 0.007);
+		figures.get(figures.size() - 1).setSpeed(random(-0.5, 0.5), random(-0.7, 0));
+		break;
+		default: break;
+		}
+		click = false;
+	}
+	if(moupre){
+		if(mode == 0){
+			stroke(255);
+			line(pmx, pmy, mouseX, mouseY);
+			noStroke();
+		}
+	}
+	for(int i = 0; i < figures.size(); i++){
+		if(figures.get(i).update())
+			figures.remove(i--);
+	}
+	
+	if(frameCount%100 == 50){
+		figures.add(new Ellipse(0, random(50, height - 50), random(5, 50), new Color(random(150, 200), 255, 255, random(70, 200))));
+		figures.get(figures.size() - 1).setPhys(0, random(0.005, 0.02));
+		figures.get(figures.size() - 1).setSpeed(random(0.5, 0.7), random(-0.5, 0));
+	}
+}
+
+void keyPressed(){
+	switch(key){
+	case 'g':
+	mode++;
+	mode = mode % 2;
+	switch(mode){
+	case 0:
+	figures.add(new BleedText(width/2 - 50, height/2, 50, new Color(255, 170), "line mode"));
+	break;
+	case 1:
+	figures.add(new BleedText(width/2 - 50, height/2, 50, new Color(255, 170), "free mode"));
+	break;
+	default: break;
+	}
+	break;
+	case 'k':
+	for(int i = 0; i < figures.size(); i++){
+		if(figures.get(i).onMouse){
+			figures.remove(i--);
+		}
+	}
+	break;
+	default: break;
+	}
+	
+}
+
+void mousePressed(){
+	moupre = true;
+	mourele = false;
+}
+
+void mouseReleased(){
+	moupre = false;
+	mourele = true;
+}
+
+void domMove(var dom, float xPos, float yPos){
+	dom.css("position", "absolute");
+	dom.css("left", xPos);
+	dom.css("top", yPos);
+}
+
+class Color{
+	int r, g, b, a;
+	Color(int all){
+		this.r = all;
+		this.g = all;
+		this.b = all;
+		this.a = 255;
+	}
+	Color(int all, int a){
+		this.r = all;
+		this.g = all;
+		this.b = all;
+		this.a = a;
+	}
+	Color(int r, int g, int b){
+		this.r = r;
+		this.g = g;
+		this.b = b;
+	}
+	Color(int r, int g, int b, int a){
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.a = a;
+	}
+	color getColor(){
+		return color(r, g, b, a);
+	}
+}
+
+abstract class Figure{
+	float xPos, yPos, dia;
+	float xPhys, yPhys;
+	float xSpeed, ySpeed;
+	Color col;
+	boolean del;
+	boolean onMouse;
+	Figure(float xPos, float yPos, float dia, Color col){
+		this.xPos = xPos;
+		this.yPos = yPos;
+		this.dia = dia;
+		this.col = col;
+	}
+	void slide(float xSpeed, float ySpeed){
+		this.xPos += xSpeed;
+		this.yPos += ySpeed;
+	}
+	void setSpeed(float xSpeed, float ySpeed){
+		this.xSpeed = xSpeed;
+		this.ySpeed = ySpeed;
+	}
+	void setPhys(float xPhys, float yPhys){
+		this.xPhys = xPhys;
+		this.yPhys = yPhys;
+	}
+	void del(){
+		this.del = true;
+	}
+	void changeColor(Color col){
+		this.col = col;
+	}
+	boolean catchOut(){
+		return this.xPos + this.dia/2 < 0 || this.xPos - this.dia/2 > width || this.yPos + this.dia/2 < 0 || this.yPos - this.dia/2 > height
+	}
+	boolean catchBottom(){
+		return this.yPos + this.dia/2 > height;
+	}
+	boolean catchTop(){
+		return this.yPos - this.dia/2 < 0; 
+	}
+	boolean catchLeft(){
+		return this.xPos - this.dia/2 > width; 
+	}
+	boolean catchRight(){
+		return this.xPos - this.dia/2 < 0; 
+	}
+	boolean catchHit(float xPos, float yPos){
+		return sq(this.xPos - xPos) + sq(this.yPos - yPos) < sq(this.dia/2);
+	}
+	boolean catchMouse(){
+		onMouse = catchHit(mouseX, mouseY)
+		return onMouse;
+	}
+	boolean catchVisible(){
+		return this.col.a <= 0;
+	}
+	// abstract boolean update();
+}
+
+class Ellipse extends Figure{
+	Ellipse(float xPos, float yPos, float dia, Color col){
+		super(xPos, yPos, dia, col);
+	}
+	boolean update(){
+		fill(col.getColor());
+		if(catchMouse()) fill(255, 170);
+		ellipse(xPos, yPos, dia, dia);
+		xPos += xSpeed;
+		yPos += ySpeed;
+		xSpeed += xPhys;
+		ySpeed += yPhys;
+		if(catchBottom() || catchTop()) ySpeed *= -1;
+		del = catchOut();
+		return this.del;
+	}
+}
+
+class Text extends Figure{
+	String cont;
+	Text(float xPos, float yPos, float dia, Color col){
+		super(xPos, yPos, dia/2, col);
+		this.cont = "None"
+	}
+	Text(float xPos, float yPos, float dia, Color col, String cont){
+		super(xPos, yPos, dia/2, col);
+		this.cont = cont
+	}
+	boolean update(){
+		fill(col.getColor());
+		mainContext.font = dia+"px 'Consolas'";
+		mainContext.fillText(cont, xPos, yPos);
+	}
+}
+class BleedText extends Figure{
+	String cont;
+	BleedText(float xPos, float yPos, float dia, Color col){
+		super(xPos, yPos, dia/2, col);
+		this.cont = "None"
+	}
+	BleedText(float xPos, float yPos, float dia, Color col, String cont){
+		super(xPos, yPos, dia/2, col);
+		this.cont = cont
+	}
+	boolean update(){
+		col.a -= 2;
+		del = catchVisible();
+		fill(col.getColor());
+		mainContext.font = dia+"px 'Consolas'";
+		mainContext.fillText(cont, xPos, yPos);
+	}
+}
+
+</script>
+<script id="psub" type="application/processing">
+var subContext;
+void setup(){
+	size(400, 400);
+	var canvas = $("#subCanvas")[0];
+	subContext = canvas.getContext("2d");
+}
+void draw(){
+	background(255, 0, 0);
+	fill(255, 0, 255, 100);
+	rect(width/2, height/2, 40, 40);
+	fill(255);
+	subContext.font = "26px 'Consolas'";
+	fill(255, 255, 0);
+	subContext.fillText("test", 100, 100);
+}
+
+void mousePressed(){
+}
+
+</script>
+</head>
+
+<body>
+<canvas id="mainCanvas"></canvas>
+<!-- <canvas id="subCanvas"></canvas> -->
+<div id="domcon" style="position: relative; color: white">console</div>
+
+<script>
+var num = 10;
+</script>
+
+</body>
+
+</html>
