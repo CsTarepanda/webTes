@@ -84,7 +84,7 @@ boolean resizeFlg = false;
 void setup(){
 	// size($(window).width() - 20, $(window).height() - 23);
 	size($(window).width() - 15, $(window).height() - 17);
-	memoWindowSize = width;
+	memoWindowSize = $(window).width() + 17;
 	figures = new ArrayList();
 	slides = new ArrayList();
 	slides.add(new XSlide(-width * 0.5, 0, $("#tut"), width * 0.5));
@@ -100,7 +100,8 @@ void setup(){
 	slides.add(new YSlide(0, height * 1.5, $("#ystudent"), height * -0.5));
 
 	noStroke();
-	consolen("mode change \'g\'");
+	// consolen("mode change \'g\'");
+	consolen("Hello, world!!");
 	var canvas = $("#mainCanvas")[0];
 	mainContext = canvas.getContext("2d");
 	rectMode(CENTER);
@@ -147,8 +148,8 @@ boolean endSetup = false;
 float diasp = 0.2;
 float diaspsp = 0.00026;
 void draw(){
-	if(memoWindowSize != $(window).width() - 15){
-		memoWindowSize = $(window).width() - 15;
+	if(memoWindowSize != $(window).width()){
+		memoWindowSize = $(window).width();
 		size($(window).width() - 15, $(window).height() - 17);
 		resizeFlg = true;
 	}
@@ -161,17 +162,17 @@ void draw(){
 	background(0);
 	for(int i = 0; i < linkSetup.size(); i++){
 		linkSetup.get(i).update();
-		if(endSetup || linkSetup.get(i).xPos >= int($(window).width()/2 + ($(window).width() < height ? $(window).width()/4 : height/4) * 1.2)){
+		if(endSetup || linkSetup.get(i).xPos > int(width/2 + (width < height ? width/4 : height/4) * 1.2)){
 			endSetup = true;
-			int dia = $(window).width() < height ? $(window).width()/4 : height/4;
+			int dia = width < height ? width/4 : height/4;
 			for(int j = 0; j < linkSetup.size(); j++){
 				if(j != linkSetup.size() - 1){
-					linkSetup.get(j).xPos = $(window).width()/2 + dia*1.2*cos(radians(360/5*j - 18));
+					linkSetup.get(j).xPos = width/2 + dia*1.2*cos(radians(360/5*j - 18));
 					linkSetup.get(j).yPos = height/2 + dia*1.2*sin(radians(360/5*j - 18));
 					linkSetup.get(j).setSpeed(0, 0);
 					linkSetup.get(j).dia += diasp;
 				}
-				if(linkSetup.get(j).dia >= ($(window).width() < height ? $(window).width()/4 : height/4))
+				if(linkSetup.get(j).dia >= (width < height ? width/4 : height/4))
 					linkSetup.remove(j--);
 			}
 			if(linkSetup.get(0).dia > 0){
@@ -183,12 +184,12 @@ void draw(){
 		}
 		if(linkSetup.size() == 1){
 			linkSetup.remove(0);
-			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "ようこそ！"));
+			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "ようこそ！"));
 		}
 	}
 
 	frontLinkTarget = mainLinkTarget;
-	if(linkSetup.size() == 0) mainLinkTarget = mainLink($(window).width()/2, height/2);
+	if(linkSetup.size() == 0) mainLinkTarget = mainLink(width/2, height/2);
 	if(mainLinkTarget != -1 && frontLinkTarget != mainLinkTarget && !linkChange) linkChange = true;
 	if(mainLinkTarget != -1) linkTarget = mainLinkTarget;
 
@@ -206,7 +207,7 @@ void draw(){
 		if(linkChange){
 			slides.get(0).slideIn();
 			slides.get(5).slideIn();
-			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "東京工科大学"));
+			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "東京工科大学"));
 		}
 	break;
 	case 1:
@@ -217,7 +218,7 @@ void draw(){
 		if(linkChange){
 			slides.get(1).slideIn();
 			slides.get(6).slideIn();
-			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "moodle"));
+			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "moodle"));
 		}
 	break;
 	case 2:
@@ -228,7 +229,7 @@ void draw(){
 		if(linkChange){
 			slides.get(2).slideIn();
 			slides.get(7).slideIn();
-			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "Twitter"));
+			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "Twitter"));
 		}
 	break;
 	case 3:
@@ -239,7 +240,7 @@ void draw(){
 		if(linkChange){
 			slides.get(3).slideIn();
 			slides.get(8).slideIn();
-			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "ニコニコ動画"));
+			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "ニコニコ動画"));
 }
 	break;
 	case 4:
@@ -250,7 +251,7 @@ void draw(){
 		if(linkChange){
 			slides.get(4).slideIn();
 			slides.get(9).slideIn();
-			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "学内サイト"));
+			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "学内サイト"));
 }
 	break;
 	default: break;
@@ -340,7 +341,7 @@ void domMove(var dom, float xPos, float yPos){
 
 float rotateAngle;
 int mainLink(float xPos, float yPos){
-	int dia = $(window).width() < height ? $(window).width()/4 : height/4;
+	float dia = width < height ? width/4 : height/4;
 	int result = -1;
 	for(int i = 0; i < 5; i++){
 		if(onMouse(xPos + dia*1.2*cos(radians(i*(360/5) - 90 + rotateAngle)), yPos + dia*1.2*sin(radians(i*(360/5) - 90 + rotateAngle)), dia)){

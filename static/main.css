@@ -2,6 +2,9 @@ body{
 	background-color: black;
 }
 
+div{
+	font-family: "Consolas";
+}
 .sideMenu{
 	color: white;
 	width: 20%;
