@@ -1,3 +1,22 @@
 body{
 	background-color: black;
 }
+
+.sideMenu{
+	color: white;
+	width: 20%;
+	height: 100%;
+	display: inline-block;
+	padding: 10px;
+	font-size: 200%;
+}
+.sideMenuTitle{
+}
+
+.bottomUrl{
+	background-color: gray;
+	color: white;
+	width: 100%;
+	height: 20%;
+	display: inline-block;
+}

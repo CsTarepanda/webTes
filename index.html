@@ -77,11 +77,28 @@
 
 ArrayList figures;
 ArrayList linkSetup;
+ArrayList slides;
 var mainCont;
+int memoWindowSize;
+boolean resizeFlg = false;
 void setup(){
 	// size($(window).width() - 20, $(window).height() - 23);
 	size($(window).width() - 15, $(window).height() - 17);
+	memoWindowSize = width;
 	figures = new ArrayList();
+	slides = new ArrayList();
+	slides.add(new XSlide(-width * 0.5, 0, $("#tut"), width * 0.5));
+	slides.add(new XSlide(-width * 0.5, 0, $("#moodle"), width * 0.5));
+	slides.add(new XSlide(-width * 0.5, 0, $("#twitter"), width * 0.5));
+	slides.add(new XSlide(-width * 0.5, 0, $("#nico"), width * 0.5));
+	slides.add(new XSlide(-width * 0.5, 0, $("#student"), width * 0.5));
+	
+	slides.add(new YSlide(0, height * 1.5, $("#ytut"), height * -0.5));
+	slides.add(new YSlide(0, height * 1.5, $("#ymoodle"), height * -0.5));
+	slides.add(new YSlide(0, height * 1.5, $("#ytwitter"), height * -0.5));
+	slides.add(new YSlide(0, height * 1.5, $("#ynico"), height * -0.5));
+	slides.add(new YSlide(0, height * 1.5, $("#ystudent"), height * -0.5));
+
 	noStroke();
 	consolen("mode change \'g\'");
 	var canvas = $("#mainCanvas")[0];
@@ -91,24 +108,29 @@ void setup(){
 	float sp = 0.9;
 	Figure moodle = new Ellipse(width/2, height/2, 50, new Color(255, 255, 0, 170));
 	moodle.setSpeed(sp*cos(radians(-18)), sp*sin(radians(-18)));
+	moodle.setLink("https://service.cloud.teu.ac.jp/moodle/");
 
-	Figure tut = new Ellipse(width/2, height/2, 50, new Color(0, 255, 255, 170));
-	tut.setSpeed(sp*cos(radians(54)), sp*sin(radians(54)));
+	Figure twitter = new Ellipse(width/2, height/2, 50, new Color(0, 255, 255, 170));
+	twitter.setSpeed(sp*cos(radians(54)), sp*sin(radians(54)));
+	twitter.setLink("https://twitter.com/?lang=ja");
 
-	Figure student = new Ellipse(width/2, height/2, 50, new Color(255, 0, 255, 170));
-	student.setSpeed(sp*cos(radians(126)), sp*sin(radians(126)));
+	Figure nico = new Ellipse(width/2, height/2, 50, new Color(255, 0, 255, 170));
+	nico.setSpeed(sp*cos(radians(126)), sp*sin(radians(126)));
+	nico.setLink("http://www.nicovideo.jp/video_top");
 
-	Figure nico = new Ellipse(width/2, height/2, 50, new Color(0, 0, 255, 170));
-	nico.setSpeed(sp*cos(radians(198)), sp*sin(radians(198)));
+	Figure student = new Ellipse(width/2, height/2, 50, new Color(0, 0, 255, 170));
+	student.setSpeed(sp*cos(radians(198)), sp*sin(radians(198)));
+	student.setLink("https://service.cloud.teu.ac.jp/portal/index");
 
-	Figure twitter = new Ellipse(width/2, height/2, 50, new Color(255, 0, 0, 170));
-	twitter.setSpeed(sp*cos(radians(270)), sp*sin(radians(270)));
-
+	Figure tut = new Ellipse(width/2, height/2, 50, new Color(255, 0, 0, 170));
+	tut.setSpeed(sp*cos(radians(270)), sp*sin(radians(270)));
+	tut.setLink("http://www.teu.ac.jp/");
+	
 	linkSetup.add(moodle);
-	linkSetup.add(tut);
-	linkSetup.add(student);
-	linkSetup.add(nico);
 	linkSetup.add(twitter);
+	linkSetup.add(nico);
+	linkSetup.add(student);
+	linkSetup.add(tut);
 	linkSetup.add(new Text(width/2, height/2, 50, new Color(255, 170), "ようこそ！"));
 }
 
@@ -125,20 +147,31 @@ boolean endSetup = false;
 float diasp = 0.2;
 float diaspsp = 0.00026;
 void draw(){
+	if(memoWindowSize != $(window).width() - 15){
+		memoWindowSize = $(window).width() - 15;
+		size($(window).width() - 15, $(window).height() - 17);
+		resizeFlg = true;
+	}
+	$(".sideMenu").css("font-size", $(window).width()/20);
+	if(moupre && !click){
+		pmx = mouseX;
+		pmy = mouseY;
+		click = true;
+	}
 	background(0);
 	for(int i = 0; i < linkSetup.size(); i++){
 		linkSetup.get(i).update();
-		if(endSetup || linkSetup.get(i).xPos >= int(width/2 + (width < height ? width/4 : height/4) * 1.2)){
+		if(endSetup || linkSetup.get(i).xPos >= int($(window).width()/2 + ($(window).width() < height ? $(window).width()/4 : height/4) * 1.2)){
 			endSetup = true;
-			int dia = width < height ? width/4 : height/4;
+			int dia = $(window).width() < height ? $(window).width()/4 : height/4;
 			for(int j = 0; j < linkSetup.size(); j++){
 				if(j != linkSetup.size() - 1){
-					linkSetup.get(j).xPos = width/2 + dia*1.2*cos(radians(360/5*j - 18));
+					linkSetup.get(j).xPos = $(window).width()/2 + dia*1.2*cos(radians(360/5*j - 18));
 					linkSetup.get(j).yPos = height/2 + dia*1.2*sin(radians(360/5*j - 18));
 					linkSetup.get(j).setSpeed(0, 0);
 					linkSetup.get(j).dia += diasp;
 				}
-				if(linkSetup.get(j).dia >= (width < height ? width/4 : height/4))
+				if(linkSetup.get(j).dia >= ($(window).width() < height ? $(window).width()/4 : height/4))
 					linkSetup.remove(j--);
 			}
 			if(linkSetup.get(0).dia > 0){
@@ -150,43 +183,77 @@ void draw(){
 		}
 		if(linkSetup.size() == 1){
 			linkSetup.remove(0);
-			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "ようこそ！"));
+			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "ようこそ！"));
 		}
 	}
 
 	frontLinkTarget = mainLinkTarget;
-	if(linkSetup.size() == 0) mainLinkTarget = mainLink(width/2, height/2);
+	if(linkSetup.size() == 0) mainLinkTarget = mainLink($(window).width()/2, height/2);
 	if(mainLinkTarget != -1 && frontLinkTarget != mainLinkTarget && !linkChange) linkChange = true;
 	if(mainLinkTarget != -1) linkTarget = mainLinkTarget;
 
-	switch(linkTarget){
-	case -1: break;
+	switch(mainLinkTarget){
+	case -1:
+		for(int i = 0; i < slides.size(); i++){
+			slides.get(i).slideOut();
+		}
+	break;
 	case 0:
+		if(mourele && click) link("http://www.teu.ac.jp/");
+		consoleReset();
+		consolen("東京工科大学");
 		fill(255, 0, 0, 100);
-		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "東京工科大学"));
+		if(linkChange){
+			slides.get(0).slideIn();
+			slides.get(5).slideIn();
+			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "東京工科大学"));
+		}
 	break;
 	case 1:
+		if(mourele && click) link("https://service.cloud.teu.ac.jp/moodle/");
+		consoleReset();
+		consolen("moodle");
 		fill(255, 255, 0, 100);
-		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "moodle"));
+		if(linkChange){
+			slides.get(1).slideIn();
+			slides.get(6).slideIn();
+			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "moodle"));
+		}
 	break;
 	case 2:
+		if(mourele && click) link("https://twitter.com/?lang=ja");
+		consoleReset();
+		consolen("Twitter");
 		fill(0, 255, 255, 100);
-		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "Twitter"));
+		if(linkChange){
+			slides.get(2).slideIn();
+			slides.get(7).slideIn();
+			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "Twitter"));
+		}
 	break;
 	case 3:
+		if(mourele && click) link("http://www.nicovideo.jp/video_top");
+		consoleReset();
+		consolen("ニコニコ動画");
 		fill(255, 0, 255, 100);
-		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "ニコニコ動画"));
+		if(linkChange){
+			slides.get(3).slideIn();
+			slides.get(8).slideIn();
+			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "ニコニコ動画"));
+}
 	break;
 	case 4:
+		if(mourele && click) link("https://service.cloud.teu.ac.jp/portal/index");
+		consoleReset();
+		consolen("学内サイト");
 		fill(0, 0, 255, 100);
-		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "学内サイト"));
+		if(linkChange){
+			slides.get(4).slideIn();
+			slides.get(9).slideIn();
+			figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "学内サイト"));
+}
 	break;
 	default: break;
-	}
-	if(moupre && !click){
-		pmx = mouseX;
-		pmy = mouseY;
-		click = true;
 	}
 	if(mourele && click){
 		switch(mode){
@@ -217,11 +284,15 @@ void draw(){
 	}
 	
 	if(frameCount%100 == 50){
-		figures.add(new Ellipse(0, random(50, height - 50), random(5, 50), new Color(random(150, 200), 255, 255, random(70, 200))));
+		figures.add(new Ellipse(0, random(50, height - 50), random(5, 50), new Color(random(150, 200), random(70, 200))));
 		figures.get(figures.size() - 1).setPhys(0, random(0.005, 0.02));
 		figures.get(figures.size() - 1).setSpeed(random(0.5, 0.7), random(-0.5, 0));
 	}
+	for(int i = 0; i < slides.size(); i++){
+		slides.get(i).update();
+	}
 	linkChange = false;
+	resizeFlg = false;
 }
 
 void keyPressed(){
@@ -231,10 +302,10 @@ void keyPressed(){
 	mode = mode % 2;
 	switch(mode){
 	case 0:
-	figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "line mode"));
+	figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "line mode"));
 	break;
 	case 1:
-	figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "free mode"));
+	figures.add(new BleedText($(window).width()/2, height/2, 50, new Color(255, 170), "free mode"));
 	break;
 	default: break;
 	}
@@ -262,14 +333,14 @@ void mouseReleased(){
 }
 
 void domMove(var dom, float xPos, float yPos){
-	dom.css("position", "absolute");
+	dom.css("position", "fixed");
 	dom.css("left", xPos);
 	dom.css("top", yPos);
 }
 
 float rotateAngle;
 int mainLink(float xPos, float yPos){
-	int dia = width < height ? width/4 : height/4;
+	int dia = $(window).width() < height ? $(window).width()/4 : height/4;
 	int result = -1;
 	for(int i = 0; i < 5; i++){
 		if(onMouse(xPos + dia*1.2*cos(radians(i*(360/5) - 90 + rotateAngle)), yPos + dia*1.2*sin(radians(i*(360/5) - 90 + rotateAngle)), dia)){
@@ -336,6 +407,94 @@ class Color{
 	}
 }
 
+abstract class Slide{
+	float xPos, yPos;
+	float baseXPos, baseYPos;
+	float dia;
+	var dom;
+	float angle = 90;
+	boolean inFlg = false, outFlg = false;
+	Slide(float xPos, float yPos, var dom, float dia){
+		this.xPos = xPos;
+		this.yPos = yPos;
+		this.baseXPos = xPos;
+		this.baseYPos = yPos;
+		this.dom = dom;
+		this.dia = dia;
+		domMove(dom, xPos, yPos);
+	}
+	void slideIn(){
+		inFlg = true;
+		outFlg = false;
+	}
+	void slideOut(){
+		outFlg = true;
+		inFlg = false;
+	}
+}
+class XSlide extends Slide{
+	XSlide(float xPos, float yPos, var dom, float dia){
+		super(xPos, yPos, dom, dia);
+	}
+	void slideInMove(){
+		if(angle <= 0) inFlg = false;
+		else{
+			domMove(this.dom, this.xPos, this.yPos);
+			xPos = baseXPos + dia*cos(radians(angle -= 0.5));
+		}
+	}
+	void slideOutMove(){
+		if(angle >= 90) outFlg = false;
+		else{
+			domMove(this.dom, this.xPos, this.yPos);
+			xPos = baseXPos + dia*cos(radians(angle += 0.5));
+		}
+	}
+	void update(){
+		if(resizeFlg){
+			xPos = -width * 0.5;
+			yPos = 0;
+			baseXPos = xPos;
+			baseYPos = yPos;
+			dia = width * 0.5;
+			domMove(dom, xPos, yPos);
+		}
+		if(inFlg) slideInMove();
+		else if(outFlg) slideOutMove();
+	}
+}
+class YSlide extends Slide{
+	YSlide(float xPos, float yPos, var dom, float dia){
+		super(xPos, yPos, dom, dia);
+	}
+	void slideInMove(){
+		if(angle <= 0) inFlg = false;
+		else{
+			domMove(this.dom, this.xPos, this.yPos);
+			yPos = baseYPos + dia*cos(radians(angle -= 0.5));
+		}
+	}
+	void slideOutMove(){
+		if(angle >= 90) outFlg = false;
+		else{
+			domMove(this.dom, this.xPos, this.yPos);
+			yPos = baseYPos + dia*cos(radians(angle += 0.5));
+		}
+	}
+	void update(){
+		if(resizeFlg){
+			xPos = 0;
+			yPos = height * 1.5;
+			baseXPos = xPos;
+			baseYPos = yPos;
+			dia = height * -0.5;
+			domMove(dom, xPos, yPos);
+		}
+		if(inFlg) slideInMove();
+		else if(outFlg) slideOutMove();
+	}
+}
+
 abstract class Figure{
 	float xPos, yPos, dia;
 	float xPhys, yPhys;
@@ -343,6 +502,7 @@ abstract class Figure{
 	Color col;
 	boolean del;
 	boolean onMouse;
+	String linkUrl = "None";
 	Figure(float xPos, float yPos, float dia, Color col){
 		this.xPos = xPos;
 		this.yPos = yPos;
@@ -361,6 +521,9 @@ abstract class Figure{
 		this.xPhys = xPhys;
 		this.yPhys = yPhys;
 	}
+	void setLink(String linkUrl){
+		this.linkUrl = linkUrl;
+	}
 	void del(){
 		this.del = true;
 	}
@@ -368,7 +531,7 @@ abstract class Figure{
 		this.col = col;
 	}
 	boolean catchOut(){
-		return this.xPos + this.dia/2 < 0 || this.xPos - this.dia/2 > width || this.yPos + this.dia/2 < 0 || this.yPos - this.dia/2 > height
+		return this.xPos + this.dia/2 < 0 || this.xPos - this.dia/2 > $(window).width() || this.yPos + this.dia/2 < 0 || this.yPos - this.dia/2 > height
 	}
 	boolean catchBottom(){
 		return this.yPos + this.dia/2 > height;
@@ -377,7 +540,7 @@ abstract class Figure{
 		return this.yPos - this.dia/2 < 0; 
 	}
 	boolean catchLeft(){
-		return this.xPos - this.dia/2 > width; 
+		return this.xPos - this.dia/2 > $(window).width(); 
 	}
 	boolean catchRight(){
 		return this.xPos - this.dia/2 < 0; 
@@ -396,12 +559,45 @@ abstract class Figure{
 }
 
 class Ellipse extends Figure{
+	Color[] cols = new Color[5];
 	Ellipse(float xPos, float yPos, float dia, Color col){
 		super(xPos, yPos, dia, col);
+		float rdm = random(150, 200);
+		cols[0] = new Color(255, rdm, rdm, random(70, 200));
+		cols[1] = new Color(255, 255, random(150, 200), random(70, 200));
+		cols[2] = new Color(random(150, 200), 255, 255, random(70, 200));
+		cols[3] = new Color(255, random(150, 200), 255, random(70, 200));
+		rdm = random(150, 200);
+		cols[4] = new Color(rdm, rdm, 255, random(70, 200));
 	}
 	boolean update(){
-		fill(col.getColor());
-		if(catchMouse()) fill(255, 170);
+		switch(mainLinkTarget){
+		case -1:
+			fill(col.getColor());
+			break;
+		case 0:
+			fill(cols[0].getColor());
+			break;
+		case 1:
+			fill(cols[1].getColor());
+			break;
+		case 2:
+			fill(cols[2].getColor());
+			break;
+		case 3:
+			fill(cols[3].getColor());
+			break;
+		case 4:
+			fill(cols[4].getColor());
+			break;
+		default: break;
+		}
+		if(catchMouse()){
+			fill(255, 170);
+			if(this.linkUrl != "None"){
+				if(mourele && click) link(this.linkUrl);
+			}
+		}
 		ellipse(xPos, yPos, dia, dia);
 		xPos += xSpeed;
 		yPos += ySpeed;
@@ -478,12 +674,33 @@ void mousePressed(){
 <canvas id="mainCanvas">canvas非対応</canvas>
 <!-- <canvas id="subCanvas"></canvas> -->
 <div id="domcon" style="position: fixed; top: -90; color: white">console</div>
-<div id="student" style="position: relative"></div>
-<div id="tut" style="position: relative"></div>
-<div id="moodle" style="position: relative"></div>
-<div id="nico" style="position: relative"></div>
-<div id="twitter" style="position: relative"></div>
+<!-- <img id="student" src="/static/student.png" style="width: 40%; height: auto"></img> -->
+<!-- <img id="tut" src="/static/tut.jpg" style="width: 40%; height: auto"></img> -->
+<!-- <img id="moodle" src="/static/moodle.png" style="width: 40%; height: auto"></img> -->
+<!-- <img id="nico" src="/static/nico.jpg" style="width: 40%; height: auto"></img> -->
+<!-- <img id="twitter" src="/static/twitter.png" style="width: 40%; height: auto"></img> -->
 
+<div id="tut" class="sideMenu" style="background: rgba(255, 0, 0, 0.3)">
+	tut
+</div>
+<div id="student" class="sideMenu" style="background: rgba(0, 0, 255, 0.3)">
+	portal
+</div>
+<div id="moodle" class="sideMenu" style="background: rgba(255, 255, 0, 0.3)">
+	moodle
+</div>
+<div id="nico" class="sideMenu" style="background: rgba(255, 0, 255, 0.3)">
+	nico
+</div>
+<div id="twitter" class="sideMenu" style="background: rgba(0, 255, 255, 0.3)">
+	twitter
+</div>
+
+<div id="ytut" class="bottomUrl">東京工科大学　http://www.teu.ac.jp/</div>
+<div id="ystudent" class="bottomUrl">学内サイト　https://service.cloud.teu.ac.jp/moodle/</div>
+<div id="ymoodle" class="bottomUrl">moodle　https://twitter.com/?lang=ja</div>
+<div id="ynico" class="bottomUrl">ニコニコ動画　https://service.cloud.teu.ac.jp/portal/index</div>
+<div id="ytwitter" class="bottomUrl">Twitter　http://www.nicovideo.jp/video_top</div>
 <script>
 var num = 10;
 </script>
