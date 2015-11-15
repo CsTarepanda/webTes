@@ -1,7 +1,8 @@
 <html>
 <head>
 <link rel="stylesheet" type="text/css" href="/static/main.css">
-<script type="text/javascript" src="https://raw.githubusercontent.com/CsTarepanda/tes/master/processing.js"></script>
+<script type="text/javascript" src="https://raw.githubusercontent.com/CsTarepanda/tes/master/processing.js"></script> 
+<!-- <script type="text/javascript" src="./processing.js"></script> -->
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js"></script>
 <title>title</title>
@@ -31,6 +32,7 @@
 		for(var i = 0; i < consoleLog.length; i++){
 			consoleLog[i] = "";
 		}
+		nowTarget = -1;
 	}
 	function consolen(cont){
 		if(nowTarget == -1){
@@ -74,15 +76,40 @@
 <script id="pmain" type="application/processing">
 
 ArrayList figures;
+ArrayList linkSetup;
 var mainCont;
 void setup(){
 	// size($(window).width() - 20, $(window).height() - 23);
-	size($(window).width() - 15, 500);
+	size($(window).width() - 15, $(window).height() - 17);
 	figures = new ArrayList();
 	noStroke();
 	consolen("mode change \'g\'");
 	var canvas = $("#mainCanvas")[0];
 	mainContext = canvas.getContext("2d");
+	rectMode(CENTER);
+	linkSetup = new ArrayList();
+	float sp = 0.9;
+	Figure moodle = new Ellipse(width/2, height/2, 50, new Color(255, 255, 0, 170));
+	moodle.setSpeed(sp*cos(radians(-18)), sp*sin(radians(-18)));
+
+	Figure tut = new Ellipse(width/2, height/2, 50, new Color(0, 255, 255, 170));
+	tut.setSpeed(sp*cos(radians(54)), sp*sin(radians(54)));
+
+	Figure student = new Ellipse(width/2, height/2, 50, new Color(255, 0, 255, 170));
+	student.setSpeed(sp*cos(radians(126)), sp*sin(radians(126)));
+
+	Figure nico = new Ellipse(width/2, height/2, 50, new Color(0, 0, 255, 170));
+	nico.setSpeed(sp*cos(radians(198)), sp*sin(radians(198)));
+
+	Figure twitter = new Ellipse(width/2, height/2, 50, new Color(255, 0, 0, 170));
+	twitter.setSpeed(sp*cos(radians(270)), sp*sin(radians(270)));
+
+	linkSetup.add(moodle);
+	linkSetup.add(tut);
+	linkSetup.add(student);
+	linkSetup.add(nico);
+	linkSetup.add(twitter);
+	linkSetup.add(new Text(width/2, height/2, 50, new Color(255, 170), "ようこそ！"));
 }
 
 int mode = 0;
@@ -90,8 +117,72 @@ boolean click = false;
 boolean moupre = false;
 boolean mourele = true;
 int pmx, pmy;
+int linkTarget = -1;
+int mainLinkTarget = -1;
+int frontLinkTarget = 0;
+boolean linkChange = false;
+boolean endSetup = false;
+float diasp = 0.2;
+float diaspsp = 0.00026;
 void draw(){
 	background(0);
+	for(int i = 0; i < linkSetup.size(); i++){
+		linkSetup.get(i).update();
+		if(endSetup || linkSetup.get(i).xPos >= int(width/2 + (width < height ? width/4 : height/4) * 1.2)){
+			endSetup = true;
+			int dia = width < height ? width/4 : height/4;
+			for(int j = 0; j < linkSetup.size(); j++){
+				if(j != linkSetup.size() - 1){
+					linkSetup.get(j).xPos = width/2 + dia*1.2*cos(radians(360/5*j - 18));
+					linkSetup.get(j).yPos = height/2 + dia*1.2*sin(radians(360/5*j - 18));
+					linkSetup.get(j).setSpeed(0, 0);
+					linkSetup.get(j).dia += diasp;
+				}
+				if(linkSetup.get(j).dia >= (width < height ? width/4 : height/4))
+					linkSetup.remove(j--);
+			}
+			if(linkSetup.get(0).dia > 0){
+				diasp -= diaspsp;
+			} else {
+				diaspsp = -0.005;
+				diasp -= diaspsp;
+			}
+		}
+		if(linkSetup.size() == 1){
+			linkSetup.remove(0);
+			figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "ようこそ！"));
+		}
+	}
+
+	frontLinkTarget = mainLinkTarget;
+	if(linkSetup.size() == 0) mainLinkTarget = mainLink(width/2, height/2);
+	if(mainLinkTarget != -1 && frontLinkTarget != mainLinkTarget && !linkChange) linkChange = true;
+	if(mainLinkTarget != -1) linkTarget = mainLinkTarget;
+
+	switch(linkTarget){
+	case -1: break;
+	case 0:
+		fill(255, 0, 0, 100);
+		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "東京工科大学"));
+	break;
+	case 1:
+		fill(255, 255, 0, 100);
+		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "moodle"));
+	break;
+	case 2:
+		fill(0, 255, 255, 100);
+		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "Twitter"));
+	break;
+	case 3:
+		fill(255, 0, 255, 100);
+		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "ニコニコ動画"));
+	break;
+	case 4:
+		fill(0, 0, 255, 100);
+		if(linkChange)figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "学内サイト"));
+	break;
+	default: break;
+	}
 	if(moupre && !click){
 		pmx = mouseX;
 		pmy = mouseY;
@@ -130,6 +221,7 @@ void draw(){
 		figures.get(figures.size() - 1).setPhys(0, random(0.005, 0.02));
 		figures.get(figures.size() - 1).setSpeed(random(0.5, 0.7), random(-0.5, 0));
 	}
+	linkChange = false;
 }
 
 void keyPressed(){
@@ -139,10 +231,10 @@ void keyPressed(){
 	mode = mode % 2;
 	switch(mode){
 	case 0:
-	figures.add(new BleedText(width/2 - 50, height/2, 50, new Color(255, 170), "line mode"));
+	figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "line mode"));
 	break;
 	case 1:
-	figures.add(new BleedText(width/2 - 50, height/2, 50, new Color(255, 170), "free mode"));
+	figures.add(new BleedText(width/2, height/2, 50, new Color(255, 170), "free mode"));
 	break;
 	default: break;
 	}
@@ -173,6 +265,45 @@ void domMove(var dom, float xPos, float yPos){
 	dom.css("position", "absolute");
 	dom.css("left", xPos);
 	dom.css("top", yPos);
+}
+
+float rotateAngle;
+int mainLink(float xPos, float yPos){
+	int dia = width < height ? width/4 : height/4;
+	int result = -1;
+	for(int i = 0; i < 5; i++){
+		if(onMouse(xPos + dia*1.2*cos(radians(i*(360/5) - 90 + rotateAngle)), yPos + dia*1.2*sin(radians(i*(360/5) - 90 + rotateAngle)), dia)){
+			fill(255, 170);
+			result = i;
+		}else{
+			switch(i){
+			case 0:
+				fill(255, 0, 0, 170);
+			break;
+			case 1:
+				fill(255, 255, 0, 170);
+			break;
+			case 2:
+				fill(0, 255, 255, 170);
+			break;
+			case 3:
+				fill(255, 0, 255, 170);
+			break;
+			case 4:
+				fill(0, 0, 255, 170);
+			break;
+			default: break;
+			}
+		}
+		ellipse(xPos + dia*1.2*cos(radians(i*(360/5) - 90 + rotateAngle)), yPos + dia*1.2*sin(radians(i*(360/5) - 90 + rotateAngle)), dia, dia)
+	}
+	if(result == -1) rotateAngle += 0.06;
+	else rotateAngle += 0.02;
+	return result;
+}
+
+void onMouse(float xPos, float yPos, float dia){
+	return sq(xPos - mouseX) + sq(yPos - mouseY) < sq(dia/2);
 }
 
 class Color{
@@ -294,6 +425,7 @@ class Text extends Figure{
 	}
 	boolean update(){
 		fill(col.getColor());
+		mainContext.textAlign = "center"
 		mainContext.font = dia+"px 'Consolas'";
 		mainContext.fillText(cont, xPos, yPos);
 	}
@@ -309,9 +441,10 @@ class BleedText extends Figure{
 		this.cont = cont
 	}
 	boolean update(){
-		col.a -= 2;
+		col.a -= 2.5;
 		del = catchVisible();
 		fill(col.getColor());
+		mainContext.textAlign = "center"
 		mainContext.font = dia+"px 'Consolas'";
 		mainContext.fillText(cont, xPos, yPos);
 	}
@@ -342,9 +475,14 @@ void mousePressed(){
 </head>
 
 <body>
-<canvas id="mainCanvas"></canvas>
+<canvas id="mainCanvas">canvas非対応</canvas>
 <!-- <canvas id="subCanvas"></canvas> -->
-<div id="domcon" style="position: relative; color: white">console</div>
+<div id="domcon" style="position: fixed; top: -90; color: white">console</div>
+<div id="student" style="position: relative"></div>
+<div id="tut" style="position: relative"></div>
+<div id="moodle" style="position: relative"></div>
+<div id="nico" style="position: relative"></div>
+<div id="twitter" style="position: relative"></div>
 
 <script>
 var num = 10;
